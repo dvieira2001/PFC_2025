@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
-import { auth } from '../../../auth';
-import prisma from '../../../prisma/prismaClient';
+import { auth } from '@@/auth';
+import prisma from '@@/prisma/prismaClient';
 import { UserType } from '@/permissions/utils';
 
 // Schema para validação da segunda parte do formulário médico
@@ -29,12 +29,16 @@ const formularioMedicoParte2Schema = z.object({
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Verificar autenticação
-  const session = await auth({ req });
-  if (!session) {
+  const session = await auth(req, res);
+  if (!session?.user) {
     return res.status(401).json({ message: 'Não autorizado' });
   }
 
   const { id, role } = session.user as UserType;
+
+  if (!id) {
+    return res.status(401).json({ message: 'Usuário inválido' });
+  }
 
   if (req.method === 'POST') {
     try {
